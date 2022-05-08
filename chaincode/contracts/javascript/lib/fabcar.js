@@ -25,7 +25,8 @@ class FabCar extends Contract {
                 region: 'Liege',
                 commentaire: 'Validé: 01/03/2022',
                 valide: 'true',
-                Retire: 'false',
+                retirer: 'false',
+                payer: 'false',
             },
             {
                 gestionnaireID: '54893254',
@@ -37,7 +38,8 @@ class FabCar extends Contract {
                 region: 'Liege',
                 commentaire: 'Validé: 05/03/2022',
                 valide: 'true',
-                Retire: 'true',
+                retirer: 'true',
+                payer: 'false',
             },
 
             {
@@ -50,7 +52,8 @@ class FabCar extends Contract {
                 region: 'Liege',
                 commentaire: 'Validé: 6666/03/2022',
                 valide: 'false',
-                Retire: 'false',
+                retirer: 'false',
+                payer: 'false',
             },
 
             {
@@ -63,7 +66,8 @@ class FabCar extends Contract {
                 region: 'Liege',
                 commentaire: 'Validé: 08/03/2022',
                 valide: 'false',
-                Retire: 'true ',
+                retirer: 'true ',
+                payer: 'false',
             },
 
             {
@@ -76,13 +80,9 @@ class FabCar extends Contract {
                 region: 'Liege',
                 commentaire: 'Validé: 91/03/2022',
                 valide: 'true',
-                Retire: 'false',
+                retirer: 'false',
+                payer: 'false',
             },
-
-
-
-
-
 
             {
                 gestionnaireID: '38069735 ',
@@ -94,7 +94,8 @@ class FabCar extends Contract {
                 region: 'Namur',
                 commentaire: 'Pas dispo > vacances',
                 valide: 'true',
-                Retire: 'false',
+                retirer: 'false',
+                payer: 'true',
             },
 
 
@@ -122,7 +123,7 @@ class FabCar extends Contract {
     }
 
     // Create new contract
-    async createContract(ctx, gestionnaireID, leadID, app_AffID, comm_app_aff, type, montant, region, commentaire, valide, Retire) {
+    async createContract(ctx, gestionnaireID, leadID, app_AffID, comm_app_aff, type, montant, region, commentaire, valide, retirer, payer) {
         //Querry contracts to find last contract ID
         const startKey = '';
         const endKey = '';
@@ -164,7 +165,8 @@ class FabCar extends Contract {
             region,
             commentaire,
             valide,
-            Retire,
+            retirer,
+            payer,
         };
 
         await ctx.stub.putState(newID.toString(), Buffer.from(JSON.stringify(contrat)));
@@ -216,7 +218,7 @@ class FabCar extends Contract {
                 record = strValue;
             }
 
-            if (record["app_AffID"] == appAffId && record["valide"] == "true" && record["Retire"] == "false") {
+            if (record["app_AffID"] == appAffId && record["valide"] == "true" && record["retirer"] == "false") {
                 allResults.push({
                     Key: key,
                     Record: record
@@ -359,7 +361,7 @@ class FabCar extends Contract {
             throw new Error(`${contractNumber} does not exist`);
         }
         const contrat = JSON.parse(contratAsBytes.toString());
-        contrat.Retire = "true";
+        contrat.retirer = "true";
 
         await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
         console.info('============= END : setContractAsRedeemed ===========');
@@ -375,13 +377,72 @@ class FabCar extends Contract {
             throw new Error(`${contractNumber} does not exist`);
         }
         const contrat = JSON.parse(contratAsBytes.toString());
-        contrat.Retire = "false";
+        contrat.retirer = "false";
 
         await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
         console.info('============= END : setContractAsRedeemed ===========');
     }
 
 
+    //Mark specified contract as as paid 
+    async setContractAsPaid(ctx, contractNumber) {
+        console.info('============= START : setContractAsRedeemed ===========');
+
+        const contratAsBytes = await ctx.stub.getState(contractNumber); // get the contract from chaincode state
+        if (!contratAsBytes || contratAsBytes.length === 0) {
+            throw new Error(`${contractNumber} does not exist`);
+        }
+        const contrat = JSON.parse(contratAsBytes.toString());
+        contrat.payer = "true";
+
+        await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
+        console.info('============= END : setContractAsRedeemed ===========');
+    }
+
+    //Mark specified contract as as unpaid
+    async setContractAsUnpaid(ctx, contractNumber) {
+        console.info('============= START : setContractAsRedeemed ===========');
+
+        const contratAsBytes = await ctx.stub.getState(contractNumber); // get the contract from chaincode state
+        if (!contratAsBytes || contratAsBytes.length === 0) {
+            throw new Error(`${contractNumber} does not exist`);
+        }
+        const contrat = JSON.parse(contratAsBytes.toString());
+        contrat.payer = "false";
+
+        await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
+        console.info('============= END : setContractAsRedeemed ===========');
+    }
+
+
+    // Retreive contract by lead ID
+    async queryAllContractByLead(ctx, leadId) {
+        const startKey = '';
+        const endKey = '';
+        const allResults = [];
+        for await (const {
+            key,
+            value
+        } of ctx.stub.getStateByRange(startKey, endKey)) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let record;
+            try {
+                record = JSON.parse(strValue);
+            } catch (err) {
+                console.log(err);
+                record = strValue;
+            }
+
+            if (record["leadID"] == leadId) {
+                allResults.push({
+                    Key: key,
+                    Record: record
+                });
+            }
+        }
+        console.info(allResults);
+        return JSON.stringify(allResults);
+    }
 
 
 }
