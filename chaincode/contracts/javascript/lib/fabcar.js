@@ -16,88 +16,18 @@ class FabCar extends Contract {
     async initLedger(ctx) {
         console.info('============= START : Initialize Ledger ===========');
         const contrats = [{
-                gestionnaireID: '54893254',
-                leadID: '11452714',
-                app_AffID: '96566351',
-                comm_app_aff: '250.00',
-                type: 'Assur-vie',
-                montant: '1750.00',
-                region: 'Liege',
-                commentaire: 'Validé: 01/03/2022',
-                valide: 'true',
-                retirer: 'false',
-                payer: 'false',
+                gestionnaireID: "6b0e036c-1acf-4189-ac93-0bfa4b23a970",
+                leadID: "1632729b-3382-47df-9f65-ff6a87f52e44",
+                app_AffID: "34a81384-c9c7-4b31-8dda-46019c641440",
+                comm_app_aff: "20",
+                type: "Achat bien immobilier",
+                montant: "1000",
+                region: "liege",
+                commentaire: "NON",
+                valide: "false",
+                Retirer: "true",
+                payer: "true",
             },
-            {
-                gestionnaireID: '54893254',
-                leadID: '80065934 ',
-                app_AffID: '96566351',
-                comm_app_aff: '310.00',
-                type: 'Assur-vie',
-                montant: '1750.00',
-                region: 'Liege',
-                commentaire: 'Validé: 05/03/2022',
-                valide: 'true',
-                retirer: 'true',
-                payer: 'false',
-            },
-
-            {
-                gestionnaireID: '54893254',
-                leadID: '23830188  ',
-                app_AffID: '96566351',
-                comm_app_aff: '310.00',
-                type: 'Assur-vie',
-                montant: '1750.00',
-                region: 'Liege',
-                commentaire: 'Validé: 6666/03/2022',
-                valide: 'false',
-                retirer: 'false',
-                payer: 'false',
-            },
-
-            {
-                gestionnaireID: '54893254',
-                leadID: '81095403  ',
-                app_AffID: '96566351',
-                comm_app_aff: '310.00',
-                type: 'Assur-vie',
-                montant: '1750.00',
-                region: 'Liege',
-                commentaire: 'Validé: 08/03/2022',
-                valide: 'false',
-                retirer: 'true ',
-                payer: 'false',
-            },
-
-            {
-                gestionnaireID: '54893254',
-                leadID: '70757659  ',
-                app_AffID: '96566351',
-                comm_app_aff: '310.00',
-                type: 'Assur-vie',
-                montant: '1750.00',
-                region: 'Liege',
-                commentaire: 'Validé: 91/03/2022',
-                valide: 'true',
-                retirer: 'false',
-                payer: 'false',
-            },
-
-            {
-                gestionnaireID: '38069735 ',
-                leadID: '41575471 ',
-                app_AffID: '23941021 ',
-                comm_app_aff: '400.00',
-                type: 'Renovation Ch-1',
-                montant: '8750.00',
-                region: 'Namur',
-                commentaire: 'Pas dispo > vacances',
-                valide: 'true',
-                retirer: 'false',
-                payer: 'true',
-            },
-
 
         ];
 
@@ -123,7 +53,7 @@ class FabCar extends Contract {
     }
 
     // Create new contract
-    async createContract(ctx, gestionnaireID, leadID, app_AffID, comm_app_aff, type, montant, region, commentaire, valide, retirer, payer) {
+    async createContract(ctx, gestionnaireID, leadID, app_AffID, comm_app_aff, type, montant, region, commentaire, valide, Retirer, payer) {
         //Querry contracts to find last contract ID
         const startKey = '';
         const endKey = '';
@@ -145,13 +75,12 @@ class FabCar extends Contract {
                 Key: key,
                 Record: record
             });
-            //Create new index
-            newID = parseInt(key) + 1
+
         }
-        //console.info(allResults);
-        //console.info("NewID= "+ newID);
 
 
+        //Create new index
+        newID = allResults.length + 1
         console.info('============= START : Create Contract ===========');
 
         const contrat = {
@@ -165,7 +94,7 @@ class FabCar extends Contract {
             region,
             commentaire,
             valide,
-            retirer,
+            Retirer,
             payer,
         };
 
@@ -201,10 +130,10 @@ class FabCar extends Contract {
 
 
     // Retreive all valids and non redeemed contracts for specified App/Aff
-    async queryAllValidNonRedeemedContractByAppAff(ctx, appAffId) {
+    async queryAllValidContractByAppAff(ctx, appAffId) {
         const startKey = '';
         const endKey = '';
-        const allResults = [];
+        const allResults = []
         for await (const {
             key,
             value
@@ -218,7 +147,7 @@ class FabCar extends Contract {
                 record = strValue;
             }
 
-            if (record["app_AffID"] == appAffId && record["valide"] == "true" && record["retirer"] == "false") {
+            if (record["app_AffID"] == appAffId && record["valide"] == "true") {
                 allResults.push({
                     Key: key,
                     Record: record
@@ -361,7 +290,7 @@ class FabCar extends Contract {
             throw new Error(`${contractNumber} does not exist`);
         }
         const contrat = JSON.parse(contratAsBytes.toString());
-        contrat.retirer = "true";
+        contrat.Retirer = "true";
 
         await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
         console.info('============= END : setContractAsRedeemed ===========');
@@ -377,14 +306,14 @@ class FabCar extends Contract {
             throw new Error(`${contractNumber} does not exist`);
         }
         const contrat = JSON.parse(contratAsBytes.toString());
-        contrat.retirer = "false";
+        contrat.Retirer = "false";
 
         await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
         console.info('============= END : setContractAsRedeemed ===========');
     }
 
 
-    //Mark specified contract as as paid 
+    //Mark specified contract as paid by the admin
     async setContractAsPaid(ctx, contractNumber) {
         console.info('============= START : setContractAsRedeemed ===========');
 
@@ -399,7 +328,7 @@ class FabCar extends Contract {
         console.info('============= END : setContractAsRedeemed ===========');
     }
 
-    //Mark specified contract as as unpaid
+    //Mark set specified contract as not paid
     async setContractAsUnpaid(ctx, contractNumber) {
         console.info('============= START : setContractAsRedeemed ===========');
 
@@ -408,40 +337,10 @@ class FabCar extends Contract {
             throw new Error(`${contractNumber} does not exist`);
         }
         const contrat = JSON.parse(contratAsBytes.toString());
-        contrat.payer = "false";
+        contrat.payer = "true";
 
         await ctx.stub.putState(contractNumber, Buffer.from(JSON.stringify(contrat)));
         console.info('============= END : setContractAsRedeemed ===========');
-    }
-
-
-    // Retreive contract by lead ID
-    async queryAllContractByLead(ctx, leadId) {
-        const startKey = '';
-        const endKey = '';
-        const allResults = [];
-        for await (const {
-            key,
-            value
-        } of ctx.stub.getStateByRange(startKey, endKey)) {
-            const strValue = Buffer.from(value).toString('utf8');
-            let record;
-            try {
-                record = JSON.parse(strValue);
-            } catch (err) {
-                console.log(err);
-                record = strValue;
-            }
-
-            if (record["leadID"] == leadId) {
-                allResults.push({
-                    Key: key,
-                    Record: record
-                });
-            }
-        }
-        console.info(allResults);
-        return JSON.stringify(allResults);
     }
 
 
